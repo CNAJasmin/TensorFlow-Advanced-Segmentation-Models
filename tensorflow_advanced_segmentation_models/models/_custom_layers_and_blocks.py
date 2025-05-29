@@ -7,19 +7,18 @@ import tensorflow.keras.backend as K
 from tensorflow.keras import activations
 
 
+import tensorflow as tf
+from tensorflow.keras import activations
+
 class ConvolutionBnActivation(tf.keras.layers.Layer):
-    """
-    """
-    # def __init__(self, filters, kernel_size, strides=(1, 1), activation=tf.keras.activations.relu, **kwargs):
     def __init__(self, filters, kernel_size, strides=(1, 1), padding="same", data_format=None, dilation_rate=(1, 1),
-                 groups=1, activation=None, kernel_initializer="glorot_uniform", bias_initializer="zeros", kernel_regularizer=None,
-                 bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None, use_batchnorm=False, 
-                 axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True, trainable=True,
+                 groups=1, activation=None, kernel_initializer="glorot_uniform", bias_initializer="zeros",
+                 kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None,
+                 kernel_constraint=None, bias_constraint=None, use_batchnorm=False, 
+                 axis=-1, momentum=0.99, epsilon=1e-5, center=True, scale=True, trainable=True,
                  post_activation="relu", block_name=None, **kwargs):
         super(ConvolutionBnActivation, self).__init__(**kwargs)
 
-
-        # 2D Convolution Arguments
         self.filters = filters
         self.kernel_size = kernel_size
         self.strides = strides
@@ -27,7 +26,7 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
         self.data_format = data_format
         self.dilation_rate = dilation_rate
         self.activation = activation
-        self.use_bias = not (use_batchnorm)
+        self.use_bias = not use_batchnorm
         self.kernel_initializer = kernel_initializer
         self.bias_initializer = bias_initializer
         self.kernel_regularizer = kernel_regularizer
@@ -36,21 +35,18 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
         self.kernel_constraint = kernel_constraint
         self.bias_constraint = bias_constraint
 
-        # Batch Normalization Arguments
         self.axis = axis
         self.momentum = momentum
         self.epsilon = epsilon
         self.center = center
         self.scale = scale
         self.trainable = trainable
-        
+
         self.block_name = block_name
-        
+        self.post_activation = activations.get(post_activation)
+
         self.conv = None
         self.bn = None
-        #tf.keras.layers.BatchNormalization(scale=False, momentum=0.9)
-        # self.post_activation = tf.keras.layers.Activation(post_activation)
-        self.post_activation = activations.get(post_activation)
 
     def build(self, input_shape):
         self.conv = tf.keras.layers.Conv2D(
@@ -69,8 +65,7 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
             activity_regularizer=self.activity_regularizer,
             kernel_constraint=self.kernel_constraint,
             bias_constraint=self.bias_constraint,
-            name=self.block_name + "_conv" if self.block_name is not None else None
-
+            name=self.block_name + "_conv" if self.block_name else None
         )
 
         self.bn = tf.keras.layers.BatchNormalization(
@@ -80,18 +75,16 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
             center=self.center,
             scale=self.scale,
             trainable=self.trainable,
-            name=self.block_name + "_bn" if self.block_name is not None else None
+            name=self.block_name + "_bn" if self.block_name else None
         )
 
     def call(self, x, training=None):
         x = self.conv(x)
         x = self.bn(x, training=training)
         x = self.post_activation(x)
-
         return x
 
     def compute_output_shape(self, input_shape):
-        print(input_shape)
         return [input_shape[0], input_shape[1], input_shape[2], self.filters]
 
     def get_config(self):
@@ -111,7 +104,6 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
             "activity_regularizer": self.activity_regularizer,
             "kernel_constraint": self.kernel_constraint,
             "bias_constraint": self.bias_constraint,
-            # Batch Normalization Arguments
             "axis": self.axis,
             "momentum": self.momentum,
             "epsilon": self.epsilon,
@@ -119,29 +111,17 @@ class ConvolutionBnActivation(tf.keras.layers.Layer):
             "scale": self.scale,
             "trainable": self.trainable,
             "block_name": self.block_name,
-
-
-        # self.use_bias = not (use_batchnorm)
-        #
-        #
-        #
-        #
-        # self.conv = None
-        # self.bn = None
-
-
-        # tf.keras.layers.BatchNormalization(scale=False, momentum=0.9)
-        # self.post_activation = tf.keras.layers.Activation(post_activation)
             "post_activation": activations.serialize(self.post_activation),
         }
         base_config = super(ConvolutionBnActivation, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
 class AtrousSeparableConvolutionBnReLU(tf.keras.layers.Layer):
     """
     """
     def __init__(self, filters, kernel_size, strides=[1, 1, 1, 1], padding="SAME", data_format=None,
-                 dilation=None, channel_multiplier=1, axis=-1, momentum=0.99, epsilon=0.001,
+                 dilation=None, channel_multiplier=1, axis=-1, momentum=0.99, epsilon=1e-5,
                  center=True, scale=True, trainable=True, post_activation=None, block_name=None):
         super(AtrousSeparableConvolutionBnReLU, self).__init__()
 
