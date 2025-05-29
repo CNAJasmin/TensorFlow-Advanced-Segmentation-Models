@@ -176,14 +176,14 @@ class AtrousSeparableConvolutionBnReLU(tf.keras.layers.Layer):
             name="dw_kernel",
             shape=[self.kernel_size, self.kernel_size, in_channels, self.channel_multiplier],
             initializer=tf.keras.initializers.GlorotNormal(),
-            regularizer=tf.keras.regularizers.l2(l=1e-4),
+            regularizer=tf.keras.regularizers.l2(l2=1e-4),
             trainable=True
         )
         self.pw_filter = self.add_weight(
             name="pw_kernel",
             shape=[1, 1, in_channels * self.channel_multiplier, self.filters],
             initializer=tf.keras.initializers.GlorotNormal(),
-            regularizer=tf.keras.regularizers.l2(l=1e-4),
+            regularizer=tf.keras.regularizers.l2(l2=1e-4),
             trainable=True
         )
 
@@ -233,7 +233,7 @@ class AtrousSpatialPyramidPoolingV3(tf.keras.layers.Layer):
             filters=256,
             kernel_size=1,
             use_bias=False,
-            kernel_regularizer=tf.keras.regularizers.l2(l=1e-4))
+            kernel_regularizer=tf.keras.regularizers.l2(l2=1e-4))
 
 
     def call(self, input_tensor, training=None):
